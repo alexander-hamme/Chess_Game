@@ -15,8 +15,8 @@ import javax.swing.*;
 
 public class Game extends JFrame implements Runnable{
 
-    private final int WIDTH = 1200;
-    private final int HEIGHT = 1000;
+    private final int WIDTH = 700;
+    private final int HEIGHT = 650;
 
     private final int SQUAREWIDTH = 60;
 
@@ -28,8 +28,10 @@ public class Game extends JFrame implements Runnable{
 
     private final int BOARDBUFFER = 20;
 
-    private final int LEFTBUFFER = (WIDTH / 2) - (BOARDWIDTH / 2);
+    private final int LEFTBUFFER = (WIDTH / 2) - (BOARDWIDTH / 2);      // Change WIDTH to window.width?
     private final int TOPBUFFER = (HEIGHT / 2) - (BOARDHEIGHT / 2);
+
+    // ADD BOTTOMBUFFER and RIGHTBUFFER TOO SO YOU CAN RESCALE WINDOW
 
     private int numb_start_pieces = 32;
 
@@ -120,11 +122,11 @@ public class Game extends JFrame implements Runnable{
         private String pathToImages = "/home/alex/Documents/coding/java/games/src/chess_pieces/";
         BufferedImage image = null;
 
-        private void updatePosition(int a, int b) {
-            this.row = a;
-            this.col = b;
-            this.posx = LEFTBUFFER + SQUAREWIDTH * this.col;
-            this.posy = TOPBUFFER + SQUAREWIDTH * this.row;
+        private void updatePosition(int r, int c) {
+            this.row = r;
+            this.col = c;
+            this.posx = LEFTBUFFER + SQUAREWIDTH * (this.col - 1) + SQUAREWIDTH / 4;
+            this.posy = TOPBUFFER + SQUAREWIDTH * (this.row - 1) + SQUAREWIDTH / 8;
         }
 
         private void loadImage(String filename) {
@@ -238,7 +240,6 @@ public class Game extends JFrame implements Runnable{
                     sq.updateOccupant(piece);
                 }
             }
-
         }
     }
 
@@ -282,6 +283,8 @@ public class Game extends JFrame implements Runnable{
 
     }
 
+//    public void start() {       // provide parameters to start a custom configuration of game, EG 5 queens or something!
+
     synchronized public void start() {
         if (gameThread == null || ! gameThread.isAlive()) {
             gameThread = new Thread(this);
@@ -301,8 +304,6 @@ public class Game extends JFrame implements Runnable{
         }
 
     }
-     
-    // provide parameters to start a custom configuration of game, EG 5 queens or something?
 
     public static void main(String[] args) {
         System.out.println("Starting chess game");
