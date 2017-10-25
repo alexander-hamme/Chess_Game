@@ -60,7 +60,7 @@ public class Game extends JFrame implements Runnable{
          */
 
 
-        public void paintComponent(Graphics g) {
+        protected void paintComponent(Graphics g) {
 
             System.out.println("Painting canvas");
             g.setColor(background_color);
