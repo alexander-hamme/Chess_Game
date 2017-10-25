@@ -282,8 +282,6 @@ public class Game extends JFrame implements Runnable{
 
     }
 
-//    public void start() {       // provide parameters to start a custom configuration of game, EG 5 queens or something!
-
     synchronized public void start() {
         if (gameThread == null || ! gameThread.isAlive()) {
             gameThread = new Thread(this);
@@ -303,6 +301,8 @@ public class Game extends JFrame implements Runnable{
         }
 
     }
+     
+    // provide parameters to start a custom configuration of game, EG 5 queens or something?
 
     public static void main(String[] args) {
         System.out.println("Starting chess game");
