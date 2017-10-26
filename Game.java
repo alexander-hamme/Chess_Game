@@ -30,9 +30,8 @@ public class Game extends JFrame implements Runnable {
 
     private final int BOARDBUFFER = 20;
 
-    private int LEFTBUFFER = (WIDTH / 2) - (BOARDWIDTH / 2);      // Change WIDTH to window.width so it dynamically resizes?
+    private int LEFTBUFFER = (WIDTH / 2) - (BOARDWIDTH / 2); 
     private int TOPBUFFER = (HEIGHT / 2) - (BOARDHEIGHT / 2);
-
 
     private int numb_start_pieces = 32;
 
@@ -43,7 +42,6 @@ public class Game extends JFrame implements Runnable {
     private String game_title = "Chess";
 
     private String[] rownames = new String[] {"a","b","c","d","e","f","g","h"};
-
 
     private Color background_color = new Color(65, 65, 45);
     private Color selection_color = new Color(0, 241, 247);
@@ -58,7 +56,6 @@ public class Game extends JFrame implements Runnable {
     private ChessSquare[] chessSquares = new ChessSquare[ROWS*COLS];
     private ChessPiece[] chessPieces = new ChessPiece[numb_start_pieces];
 
-
     protected ChessSquare firstClicked;
     protected ChessSquare secondClicked;
 
@@ -66,7 +63,7 @@ public class Game extends JFrame implements Runnable {
     private class DrawPane extends JPanel {
         /**
          * This method is called implicitly.  It simply draws chess squares as
-         * a collection of squares that are black or white.
+         * a collection of squares that are dark or light.
          */
 
         protected void paintComponent(Graphics g) {
@@ -83,8 +80,7 @@ public class Game extends JFrame implements Runnable {
 
 //            if (boardexists) {
 
-            // Draw the chess squares
-
+            // Draw the chess board
             int w_position, h_position;
             for (int j = 0; j < COLS; j++) {
                 for (int i = 0; i < ROWS; i++) {
@@ -94,7 +90,6 @@ public class Game extends JFrame implements Runnable {
                         } else {
                             g.setColor(black_square);
                         }
-
                     } else {
                         if (j % 2 == 0) {
                             g.setColor(black_square);
@@ -102,22 +97,21 @@ public class Game extends JFrame implements Runnable {
                             g.setColor(white_square);
                         }
                     }
-
                     w_position = (j * SQUAREWIDTH) + LEFTBUFFER;
                     h_position = (i * SQUAREWIDTH) + TOPBUFFER;
-
                     g.fillRect(w_position, h_position, SQUAREWIDTH, SQUAREWIDTH);
                 }
             }
 
-            // Don't always repaint all the images???
+            // Draw images
             if (Arrays.stream(chessPieces).noneMatch(Objects::isNull)) {
                 for (ChessPiece piece: chessPieces) {
                     piece.updatePosition(piece.row, piece.col);
                     g.drawImage(piece.image, piece.posx, piece.posy, null);
                 }
             }
-
+            
+            // If one or two chess squares are selected, outline
             if (Arrays.stream(chessSquares).noneMatch(Objects::isNull)) {
                 for (ChessSquare sq: chessSquares) {
                     sq.updateWindowPosition();
@@ -136,7 +130,6 @@ public class Game extends JFrame implements Runnable {
                         g.setColor(Color.CYAN);
                         g.drawString(sq.row + ", " + sq.col, sq.posx, sq.posy);
                     }
-
                 }
             }
 
