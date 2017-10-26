@@ -1,6 +1,5 @@
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -12,8 +11,12 @@ import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
+/** Remember Rows go left to right, but from TOP to BOTTOM or vice versa???  */
 
-public class Game extends JFrame implements Runnable{
+
+public class Game extends JFrame implements Runnable {
+
+    private static final int IFW = JComponent.WHEN_IN_FOCUSED_WINDOW;
 
     private final int WIDTH = 700;
     private final int HEIGHT = 650;
@@ -28,10 +31,9 @@ public class Game extends JFrame implements Runnable{
 
     private final int BOARDBUFFER = 20;
 
-    private final int LEFTBUFFER = (WIDTH / 2) - (BOARDWIDTH / 2);      // Change WIDTH to window.width?
-    private final int TOPBUFFER = (HEIGHT / 2) - (BOARDHEIGHT / 2);
+    private int LEFTBUFFER = (WIDTH / 2) - (BOARDWIDTH / 2);      // Change WIDTH to window.width so it dynamically resizes?
+    private int TOPBUFFER = (HEIGHT / 2) - (BOARDHEIGHT / 2);
 
-    // ADD BOTTOMBUFFER and RIGHTBUFFER TOO SO YOU CAN RESCALE WINDOW
 
     private int numb_start_pieces = 32;
 
@@ -41,16 +43,25 @@ public class Game extends JFrame implements Runnable{
 
     private String game_title = "Chess";
 
+    private String[] rownames = new String[] {"a","b","c","d","e","f","g","h"};
+
+
     private Color background_color = new Color(65, 65, 45);
+    private Color selection_color = new Color(0, 241, 247);
     private Color black_square = new Color(0x312F14);
     private Color white_square = new Color(0xF6FAC9);
 
     private Thread gameThread;
 
     private DrawPane canvas; // JPanel where maze is drawn
+    private Container window;
 
     private ChessSquare[] chessSquares = new ChessSquare[ROWS*COLS];
     private ChessPiece[] chessPieces = new ChessPiece[numb_start_pieces];
+
+
+    protected ChessSquare firstClicked;
+    protected ChessSquare secondClicked;
 
 
     private class DrawPane extends JPanel {
@@ -59,10 +70,13 @@ public class Game extends JFrame implements Runnable{
          * a collection of squares that are black or white.
          */
 
-
         protected void paintComponent(Graphics g) {
 
-            System.out.println("Painting canvas");
+            System.out.println("painted canvas");
+
+            LEFTBUFFER = (canvas.getSize().width / 2) - (BOARDWIDTH / 2);
+            TOPBUFFER = (canvas.getSize().height / 2) - (BOARDWIDTH / 2);
+
             g.setColor(background_color);
 //            g.fillRect(0, 0, -1, -1);//
             g.fillRect(LEFTBUFFER - BOARDBUFFER, TOPBUFFER - BOARDBUFFER,
@@ -71,8 +85,7 @@ public class Game extends JFrame implements Runnable{
 //            if (boardexists) {
 
             // Draw the chess squares
-            int w = SQUAREWIDTH;
-            int h = SQUAREWIDTH;
+
             int w_position, h_position;
             for (int j = 0; j < COLS; j++) {
                 for (int i = 0; i < ROWS; i++) {
@@ -91,24 +104,94 @@ public class Game extends JFrame implements Runnable{
                         }
                     }
 
-                    w_position = (j * w) + LEFTBUFFER;
-                    h_position = (i * h) + TOPBUFFER;
+                    w_position = (j * SQUAREWIDTH) + LEFTBUFFER;
+                    h_position = (i * SQUAREWIDTH) + TOPBUFFER;
 
-                    g.fillRect(w_position, h_position, w, h);
+                    g.fillRect(w_position, h_position, SQUAREWIDTH, SQUAREWIDTH);
                 }
             }
 
-            System.out.println((Arrays.stream(chessPieces).noneMatch(Objects::isNull)));
-            System.out.println(Arrays.toString(chessPieces));
-
             // Don't always repaint all the images???
             if (Arrays.stream(chessPieces).noneMatch(Objects::isNull)) {
-                System.out.println("chessPieces length > 0: " + Arrays.toString(chessPieces));
                 for (ChessPiece piece: chessPieces) {
+                    piece.updatePosition(piece.row, piece.col);
                     g.drawImage(piece.image, piece.posx, piece.posy, null);
                 }
             }
 
+            if (Arrays.stream(chessSquares).noneMatch(Objects::isNull)) {
+                for (ChessSquare sq: chessSquares) {
+                    sq.updateWindowPosition();
+                    if (sq.selected){
+                        System.out.println("Selected square at " + sq.row + " " + sq.col);
+                        int[] xpoints = new int[] {sq.posx, sq.posx, sq.posx + SQUAREWIDTH, sq.posx + SQUAREWIDTH, sq.posx};
+                        int[] ypoints = new int[] {sq.posy, sq.posy + SQUAREWIDTH, sq.posy + SQUAREWIDTH, sq.posy, sq.posy};
+//                        g.drawPolygon();
+                        g.setColor(selection_color);
+                        g.drawPolyline(xpoints, ypoints, 5);
+                    }
+
+                    if (sq.occupant != null) {
+//                        g.setColor(new Color(100,50,0));
+//                        g.fillRect(sq.posx+10, sq.posy+10, SQUAREWIDTH-20, SQUAREWIDTH-20);
+                        g.setColor(Color.CYAN);
+                        g.drawString(sq.row + ", " + sq.col, sq.posx, sq.posy);
+                    }
+
+                }
+            }
+
+            g.setColor(Color.BLACK);
+
+            for (int i = 0; i < ROWS; i++) {
+                g.drawString(rownames[i], LEFTBUFFER + (int)(SQUAREWIDTH * (i + 0.5)), TOPBUFFER + (int)(SQUAREWIDTH * (COLS + 0.6)));
+                g.drawString(String.valueOf(ROWS - i), LEFTBUFFER - (SQUAREWIDTH / 2), TOPBUFFER + (SQUAREWIDTH * i) + 3 * SQUAREWIDTH / 4);
+            }
+
+//            if (firstClicked != null) {
+//
+//            }
+        }
+    }
+
+    private class ChessSquare {
+
+        private int row;
+        private int col;
+
+        private int posx;
+        private int posy;
+
+        private String name;
+        private ChessPiece occupant;
+
+        private boolean selected = false;
+
+        private ChessSquare(int r, int c, String s) {
+            this.row = r;
+            this.col = c;
+            this.name = s;
+            this.posx = LEFTBUFFER + SQUAREWIDTH * (this.col - 1);
+            this.posy = TOPBUFFER + SQUAREWIDTH * (ROWS - this.row);        // Y must be switched to be on bottom of board
+        }
+
+        private void updateWindowPosition() {
+            this.posx = LEFTBUFFER + SQUAREWIDTH * (this.col - 1);
+            this.posy = TOPBUFFER + SQUAREWIDTH * (ROWS - this.row);
+        }
+
+        private void updateOccupant(ChessPiece piece) {
+            this.occupant = piece;
+        }
+
+        private void removeOccupant() {
+            this.occupant = null;
+        }
+
+        private void clicked() {
+            if (this.occupant == null) {
+
+            }
         }
     }
 
@@ -138,6 +221,9 @@ public class Game extends JFrame implements Runnable{
             }
         }
 
+        private ChessPiece() {
+        }
+
         private ChessPiece(int r, int c, String n, String imagepath) {
             name = n;
             updatePosition(r, c);
@@ -145,35 +231,14 @@ public class Game extends JFrame implements Runnable{
         }
     }
 
-    private class ChessSquare {
+    private class Pawn extends ChessPiece {
 
-        private int row;
-        private int col;
-
-        private String name;
-        private ChessPiece occupant;
-
-        private ChessSquare(int r, int c, String s) {
-            this.row = r;
-            this.col = c;
-            this.name = s;
-        }
-
-        private void updateOccupant(ChessPiece piece) {
-            this.occupant = piece;
-        }
-
-        private void removeOccupant() {
-            this.occupant = null;
-        }
     }
 
     private void constructBoard() {
 
         int row = 1;
         int col = 1;
-
-        String[] rownames = new String[] {"a","b","c","d","e","f","g","h"};
 
         for (int i = 0; i < chessSquares.length; i++) {
 
@@ -243,14 +308,75 @@ public class Game extends JFrame implements Runnable{
         }
     }
 
-    public Game() {
+    private void getKeyPressed(KeyEvent key) {
+        System.out.println(key.getKeyChar() + "\n" + key.getKeyCode() + "\n" + key.getExtendedKeyCode()
+        );
+    }
+
+    private void getClicked(int x, int y) {
+        for (ChessSquare sq : chessSquares) {
+            if (sq.posx <= x && x <= sq.posx + SQUAREWIDTH
+                && sq.posy <= y && y <= sq.posy + SQUAREWIDTH){
+                System.out.println("Selected this square at " + sq.row + " " + sq.col);
+                sq.selected = true;
+
+                if (firstClicked == null) {
+                    firstClicked = sq;
+                } else if (secondClicked == null){
+                    secondClicked = sq;
+                } else {
+                    secondClicked.selected = false;
+                    secondClicked = firstClicked;
+                    firstClicked = sq;
+                }
+
+                canvas.repaint();
+                break;
+            }
+        }
+    }
+
+    private class MoveAction extends AbstractAction {
+
+        private String command;
+
+//      no default constructor
+
+        private MoveAction(String cmd) {
+            this.command = cmd;
+//            actionPerformed();
+        }
+
+        private boolean checkSquares() {
+            return (firstClicked != null && secondClicked != null);
+        }
+
+
+
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            if (checkSquares()) {
+                if (firstClicked.occupant != null && secondClicked.occupant == null) {
+                    System.out.println("This is true");
+                    secondClicked.occupant = firstClicked.occupant;
+                    firstClicked.removeOccupant();
+                    secondClicked.occupant.updatePosition(secondClicked.row, secondClicked.col);
+                }
+            }
+
+            canvas.repaint();
+        }
+    }
+
+    private Game() {
 
         constructBoard();
 
+        window = getContentPane();
+
         canvas = new DrawPane();
 
-        int width = ROWS * SQUAREWIDTH + 10;
-        int height = COLS * SQUAREWIDTH + 10;
+        window.add(canvas);
 
         canvas.setSize(WIDTH, HEIGHT);
 
@@ -258,34 +384,57 @@ public class Game extends JFrame implements Runnable{
 
         setContentPane(canvas);
 
-        setSize(WIDTH, HEIGHT);
-        setVisible(true);
+        setSize(WIDTH, HEIGHT);         //        window.setSize(WIDTH, HEIGHT);
 
         canvas.addMouseListener(new MouseAdapter() {  //provides empty implementation of all of MouseListener`s methods
 
             @Override
             public void mousePressed(MouseEvent e) {
                 System.out.println("Press: " + e.getX() + "," + e.getY());
-
-                super.mousePressed(e);
+                getClicked(e.getX(), e.getY());
+//                super.mousePressed(e);
             }
-
 
             @Override
             public void mouseReleased(MouseEvent e) {
                 System.out.println("Released: " + e.getX() + "," + e.getY());
-
-                super.mouseReleased(e);
             }
 
         });
+        /*
+        canvas.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent k) {
+                System.out.println("key pressed: " + k.getKeyCode());
+            }
 
+            @Override
+            public void keyPressed(KeyEvent k) {
+                getKeyPressed(k);
+            }
+
+            @Override
+            public void keyReleased(KeyEvent k) {
+                super.keyReleased(k);
+            }
+        });
+            */
+
+        MoveAction moveEnter = new MoveAction("Enter");
+        KeyStroke enterKey = KeyStroke.getKeyStroke("ENTER");
+
+        canvas.getInputMap(IFW).put(enterKey, "Enter");
+
+        canvas.getActionMap().put("Enter", moveEnter);
+//        canvas.getActionMap().put("Click", new MoveAction("Click"));
+
+        setVisible(true);
 
     }
 
 //    public void start() {       // provide parameters to start a custom configuration of game, EG 5 queens or something!
 
-    synchronized public void start() {
+    synchronized private void start() {
         if (gameThread == null || ! gameThread.isAlive()) {
             gameThread = new Thread(this);
             gameThread.start();
@@ -302,7 +451,6 @@ public class Game extends JFrame implements Runnable{
         catch (InterruptedException e) {
             System.out.println("Placeholder");
         }
-
     }
 
     public static void main(String[] args) {
