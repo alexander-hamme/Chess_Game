@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -9,10 +10,8 @@ import java.util.List;
 import java.util.Objects;
 import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
-import javax.swing.*;
 
-/** Remember Rows go left to right, but from TOP to BOTTOM or vice versa???  */
-
+/** Columns increase left to right and rows increase bottom to top  */
 
 public class Game extends JFrame implements Runnable {
 
