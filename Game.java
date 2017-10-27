@@ -31,18 +31,18 @@ public class Game extends JFrame implements Runnable {
     private int LEFTBUFFER = (WIDTH / 2) - (BOARDWIDTH / 2);                // padding to position chess board in center
     private int TOPBUFFER = (HEIGHT / 2) - (BOARDHEIGHT / 2);
 
-    private int numb_start_pieces = 32;
+    private int numbStartPieces = 32;
 
     private int sleepTime = 100;
 
     private String game_title = "Chess";
 
-    private String[] rownames = new String[] {"a","b","c","d","e","f","g","h"};
+    private String[] columnNames = new String[] {"a","b","c","d","e","f","g","h"};
 
-    private Color background_color = new Color(65, 65, 45);
-    private Color selection_color = new Color(0, 241, 247);
-    private Color black_square = new Color(0x312F14);
-    private Color white_square = new Color(0xF6FAC9);
+    private Color backgroundColor = new Color(65, 65, 45);
+    private Color selectionColor = new Color(0, 241, 247);
+    private Color blackSquare = new Color(0x312F14);
+    private Color whiteSquare = new Color(0xF6FAC9);
 
     private Thread gameThread;
 
@@ -50,7 +50,7 @@ public class Game extends JFrame implements Runnable {
     private Container window;
 
     private ChessSquare[] chessSquares = new ChessSquare[ROWS*COLS];
-    private ChessPiece[] chessPieces = new ChessPiece[numb_start_pieces];
+    private ChessPiece[] chessPieces = new ChessPiece[numbStartPieces];
     private ArrayList<ChessPiece> takenPieces = new ArrayList<>();
 
     private ChessSquare firstClicked;                                     // first square selected (origin)
@@ -59,7 +59,7 @@ public class Game extends JFrame implements Runnable {
     private class DrawPane extends JPanel {
 
         /**
-         * This method is called implicitly.  It draws chess squares as
+         * This method is called implicitly.  It simply draws chess squares as
          * a collection of squares that are dark or light.
          */
         protected void paintComponent(Graphics g) {
@@ -67,7 +67,7 @@ public class Game extends JFrame implements Runnable {
             LEFTBUFFER = (canvas.getSize().width / 2) - (BOARDWIDTH / 2);
             TOPBUFFER = (canvas.getSize().height / 2) - (BOARDWIDTH / 2);
 
-            g.setColor(background_color);
+            g.setColor(backgroundColor);
             g.fillRect(LEFTBUFFER - BOARDBUFFER, TOPBUFFER - BOARDBUFFER,
                     BOARDWIDTH + (2 * BOARDBUFFER), BOARDHEIGHT + (2 * BOARDBUFFER));
 
@@ -77,16 +77,16 @@ public class Game extends JFrame implements Runnable {
                 for (int i = 0; i < ROWS; i++) {
                     if (i % 2 == 0) {
                         if (j % 2 == 0) {
-                            g.setColor(white_square);
+                            g.setColor(whiteSquare);
                         } else {
-                            g.setColor(black_square);
+                            g.setColor(blackSquare);
                         }
 
                     } else {
                         if (j % 2 == 0) {
-                            g.setColor(black_square);
+                            g.setColor(blackSquare);
                         } else {
-                            g.setColor(white_square);
+                            g.setColor(whiteSquare);
                         }
                     }
 
@@ -97,6 +97,7 @@ public class Game extends JFrame implements Runnable {
                 }
             }
 
+            // Draw chess pieces
             if (Arrays.stream(chessPieces).noneMatch(Objects::isNull)) {
                 for (ChessPiece piece: chessPieces) {
                     piece.updatePosition(piece.row, piece.col);
@@ -104,6 +105,7 @@ public class Game extends JFrame implements Runnable {
                 }
             }
 
+            // Draw selection boxes around selected squares
             if (Arrays.stream(chessSquares).noneMatch(Objects::isNull)) {
                 for (ChessSquare sq: chessSquares) {
                     sq.updateWindowPosition();
@@ -111,7 +113,7 @@ public class Game extends JFrame implements Runnable {
                         int[] xpoints = new int[] {sq.posx, sq.posx, sq.posx + SQUAREWIDTH, sq.posx + SQUAREWIDTH, sq.posx};
                         int[] ypoints = new int[] {sq.posy, sq.posy + SQUAREWIDTH, sq.posy + SQUAREWIDTH, sq.posy, sq.posy};
 //                        g.drawPolygon();
-                        g.setColor(selection_color);
+                        g.setColor(selectionColor);
                         g.drawPolyline(xpoints, ypoints, 5);
                     }
 
@@ -123,8 +125,9 @@ public class Game extends JFrame implements Runnable {
 
             g.setColor(Color.BLACK);
 
+            // Draw row numbers and column names
             for (int i = 0; i < ROWS; i++) {
-                g.drawString(rownames[i], LEFTBUFFER + (int)(SQUAREWIDTH * (i + 0.5)), TOPBUFFER + (int)(SQUAREWIDTH * (COLS + 0.6)));
+                g.drawString(columnNames[i], LEFTBUFFER + (int)(SQUAREWIDTH * (i + 0.5)), TOPBUFFER + (int)(SQUAREWIDTH * (COLS + 0.6)));
                 g.drawString(String.valueOf(ROWS - i), LEFTBUFFER - (SQUAREWIDTH / 2), TOPBUFFER + (SQUAREWIDTH * i) + 3 * SQUAREWIDTH / 4);
             }
         }
@@ -230,9 +233,9 @@ public class Game extends JFrame implements Runnable {
 
         for (int i = 0; i < chessSquares.length; i++) {
 
-            System.out.println(rownames[col-1] + col);
+            System.out.println(columnNames[col-1] + col);
 
-            chessSquares[i] = new ChessSquare(row, col, rownames[col-1] + col);
+            chessSquares[i] = new ChessSquare(row, col, columnNames[col-1] + col);
 
             if (col < 8) col ++;
 
@@ -245,6 +248,8 @@ public class Game extends JFrame implements Runnable {
         /*
          * TODO: IF USER IS PLAYING WHITE: ..... ELSE: .....
          */
+
+        // Construct chess pieces for each side
 
         int idx = 0;
         String side = "player";
@@ -288,6 +293,7 @@ public class Game extends JFrame implements Runnable {
 
         }
 
+        // Assign chess pieces to their respective squares
         for (ChessPiece piece: chessPieces) {
             for (ChessSquare sq : chessSquares) {
                 if (piece.row == sq.row && piece.col == sq.col) {
@@ -299,6 +305,7 @@ public class Game extends JFrame implements Runnable {
 
     private void getClicked(int x, int y) {
         for (ChessSquare sq : chessSquares) {
+            // If click coordinates correspond to a square
             if (sq.posx <= x && x <= sq.posx + SQUAREWIDTH
                 && sq.posy <= y && y <= sq.posy + SQUAREWIDTH){
                 System.out.println("Selected square at " + sq.row + " " + sq.col);
@@ -328,6 +335,10 @@ public class Game extends JFrame implements Runnable {
 
     private class MoveAction extends AbstractAction {
 
+        /**
+         * Action to take when Enter key is pressed.
+         */
+
         private final int DONOTHING = 0;
         private final int MOVETOEMPTY = 1;
         private final int TAKEPIECE = 2;
@@ -341,7 +352,7 @@ public class Game extends JFrame implements Runnable {
 //          do nothing
         }
 
-        private void checkSquares() {
+        private void checkSquares() {           // Check selection status of squares
 
             if (firstClicked == null || secondClicked == null || firstClicked.occupant == null) {
                 this.MOVEACTION = DONOTHING;
@@ -382,15 +393,14 @@ public class Game extends JFrame implements Runnable {
         }
 
         private void moveToEmpty(ChessSquare sq1, ChessSquare sq2) {
-            System.out.println("Moveaction is: " + this.MOVEACTION);
-            System.out.println("Moving " + sq1.occupant.side + " piece from " + sq1.toString() + " to " + sq2.toString());
+
+            System.out.println("Moving " + sq1.occupant.name + " from " + sq1.toString() + " to " + sq2.toString());
             secondClicked.updateOccupant(firstClicked.occupant);
             firstClicked.removeOccupant();
             secondClicked.occupant.updatePosition(secondClicked.row, secondClicked.col);
 
             canvas.repaint();
-            clearSelected();
-
+            clearSelected();        // This must be called AFTER canvas.repaint
         }
 
         private void takePiece(ChessSquare sq1, ChessSquare sq2) throws AssertionError{
@@ -413,21 +423,20 @@ public class Game extends JFrame implements Runnable {
             sq2.occupant.updatePosition(sq2.row, sq2.col);
 
             canvas.repaint();
-            clearSelected();
+            clearSelected();        // This must be called AFTER canvas.repaint
 
         }
 
         private void doCastle(ChessSquare sq1, ChessSquare sq2) {
             try {
                 assert (sq1.occupant.name.equals("king") && (sq2.occupant.name.equals("rook")));
-            } catch (AssertionError e) {
-                return;
-            }
+            } catch (AssertionError ignored) {}
 
             // Check that squares in between king and rook are empty
         }
 
         private void clearSelected() {
+
             if (firstClicked != null) firstClicked.selected = false;
             if (secondClicked != null) secondClicked.selected = false;
             firstClicked = null;
@@ -510,12 +519,11 @@ public class Game extends JFrame implements Runnable {
             notify();
     }
 
-    public void run() { 
+    public void run() {
         // run method for thread repeatedly calls repaint on canvas and adds short delay to iterations
         canvas.repaint();
         try { Thread.sleep(sleepTime); } // wait a bit before starting
-        catch (InterruptedException ignored) {
-        }
+        catch (InterruptedException ignored) {}
     }
 
     public static void main(String[] args) {
