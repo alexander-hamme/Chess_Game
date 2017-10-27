@@ -59,7 +59,7 @@ public class Game extends JFrame implements Runnable {
     private class DrawPane extends JPanel {
 
         /**
-         * This method is called implicitly.  It simply draws chess squares as
+         * This method is called implicitly.  It draws chess squares as
          * a collection of squares that are dark or light.
          */
         protected void paintComponent(Graphics g) {
@@ -68,12 +68,10 @@ public class Game extends JFrame implements Runnable {
             TOPBUFFER = (canvas.getSize().height / 2) - (BOARDWIDTH / 2);
 
             g.setColor(background_color);
-//            g.fillRect(0, 0, -1, -1);//
             g.fillRect(LEFTBUFFER - BOARDBUFFER, TOPBUFFER - BOARDBUFFER,
-                    BOARDWIDTH + (2 * BOARDBUFFER), BOARDHEIGHT + (2 * BOARDBUFFER));//// width,height);
+                    BOARDWIDTH + (2 * BOARDBUFFER), BOARDHEIGHT + (2 * BOARDBUFFER));
 
             // Draw the chess squares
-
             int w_position, h_position;
             for (int j = 0; j < COLS; j++) {
                 for (int i = 0; i < ROWS; i++) {
