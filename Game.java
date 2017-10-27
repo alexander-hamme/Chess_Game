@@ -9,8 +9,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.awt.*;
 
-/** Rows increase from bottom to top, and Columns from left to right*/
-
+/** Rows increase from bottom to top, and Columns from left to right */
 
 public class Game extends JFrame implements Runnable {
 
