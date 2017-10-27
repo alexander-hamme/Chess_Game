@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -58,7 +59,7 @@ public class Game extends JFrame implements Runnable {
 
     private ChessSquare[] chessSquares = new ChessSquare[ROWS*COLS];
     private ChessPiece[] chessPieces = new ChessPiece[numb_start_pieces];
-
+    private ArrayList<ChessPiece> takenPieces = new ArrayList<>();
 
     protected ChessSquare firstClicked;
     protected ChessSquare secondClicked;
@@ -194,12 +195,6 @@ public class Game extends JFrame implements Runnable {
         private void removeOccupant() {
             this.occupant = null;
         }
-
-        private void clicked() {
-            if (this.occupant == null) {
-
-            }
-        }
     }
 
     private class ChessPiece {
@@ -217,7 +212,14 @@ public class Game extends JFrame implements Runnable {
             this.row = r;
             this.col = c;
             this.posx = LEFTBUFFER + SQUAREWIDTH * (this.col - 1) + SQUAREWIDTH / 4;
-            this.posy = TOPBUFFER + SQUAREWIDTH * (this.row - 1) + SQUAREWIDTH / 8;
+            this.posy = TOPBUFFER + SQUAREWIDTH * (ROWS - this.row) + SQUAREWIDTH / 8;
+        }
+
+        private void removeFromBoard() {
+            this.row = -1;
+            this.col = -1;
+            this.image = null;
+
         }
 
         private void loadImage(String filename) {
@@ -268,7 +270,7 @@ public class Game extends JFrame implements Runnable {
 
         int idx = 0;
         String side = "player";
-        String color = "black";
+        String color = "white";
 
         for (int j = 0; j < 2; j++) {
 
@@ -304,7 +306,7 @@ public class Game extends JFrame implements Runnable {
             }
 
             side = "opponent";
-            color = "white";
+            color = "black";
 
         }
 
@@ -394,16 +396,36 @@ public class Game extends JFrame implements Runnable {
 
             } else {
 
-                if (secondClicked.occupant.side.equals("opponent")) {
-                    this.MOVEACTION = TAKEPIECE;
-                } else if (secondClicked.occupant.side.equals("player")){
-                    if (firstClicked.occupant.name.equals("king") && secondClicked.occupant.name.equals("rook")) {
-                        this.MOVEACTION = DOCASTLE;
-                    } // else do nothing
-                } else {
-                    this.MOVEACTION = DONOTHING;
+                switch (secondClicked.occupant.side) {
+
+                    case "opponent": this.MOVEACTION = TAKEPIECE; break;
+
+                    case "player": this.MOVEACTION = DONOTHING;
+
+                        if (firstClicked.occupant.name.equals("king") && secondClicked.occupant.name.equals("rook")) {
+                            this.MOVEACTION = DOCASTLE;
+                        }
+
+                        break;
+
+                    default: this.MOVEACTION = DONOTHING;
                 }
             }
+
+//                        if (secondClicked.occupant.side.equals("opponent")) {
+//                    this.MOVEACTION = TAKEPIECE;
+//
+//                } else if (secondClicked.occupant.side.equals("player")) {
+//
+//                    this.MOVEACTION = DONOTHING;
+//
+//                    if (firstClicked.occupant.name.equals("king") && secondClicked.occupant.name.equals("rook")) {
+//                        this.MOVEACTION = DOCASTLE;
+//                    }
+//                } else {
+//                    this.MOVEACTION = DONOTHING;
+//                }
+//            }
 //            return (firstClicked != null && secondClicked != null);
         }
 
@@ -414,34 +436,72 @@ public class Game extends JFrame implements Runnable {
             firstClicked.removeOccupant();
             secondClicked.occupant.updatePosition(secondClicked.row, secondClicked.col);
 
-            firstClicked.selected = false;
-            secondClicked.selected = false;
-            firstClicked = null;
-            secondClicked = null;
-
             canvas.repaint();
+            clearSelected();
+
         }
 
-        private void takePiece(ChessSquare sq1, ChessSquare sq2) {
+        private void takePiece(ChessSquare sq1, ChessSquare sq2) throws AssertionError{
+            try {
+                assert (!(sq1.occupant.side.equals(sq2.occupant.side)));
+            } catch (AssertionError e) {
+                System.out.println("Couldn't take piece");
+                return;
+            }
 
+            System.out.println("Taking " + sq2.occupant.side + " "+ sq2.occupant.name + " with "
+            + sq1.occupant.side + " " + sq1.occupant.name);
+
+            takenPieces.add(sq2.occupant);
+            sq2.occupant.removeFromBoard();
+            sq2.removeOccupant();
+
+            sq2.updateOccupant(sq1.occupant);
+            sq1.removeOccupant();
+            sq2.occupant.updatePosition(sq2.row, sq2.col);
+
+            canvas.repaint();
+            clearSelected();
+
+        }
+
+        private void doCastle(ChessSquare sq1, ChessSquare sq2) {
+            try {
+                assert (sq1.occupant.name.equals("king") && (sq2.occupant.name.equals("rook")));
+            } catch (AssertionError e) {
+                return;
+            }
+
+            // Get squares in between them
+        }
+
+            private void clearSelected() {
+            if (firstClicked != null) firstClicked.selected = false;
+            if (secondClicked != null) secondClicked.selected = false;
+            firstClicked = null;
+            secondClicked = null;
+            canvas.repaint();
         }
 
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
+
             checkSquares();
 
             switch (this.MOVEACTION) {
 
-                case DONOTHING: return;
+                case DONOTHING: break;
 
-                case MOVETOEMPTY: moveToEmpty(firstClicked, secondClicked);
+                case MOVETOEMPTY: moveToEmpty(firstClicked, secondClicked); break;
 
-                case TAKEPIECE: takePiece(firstClicked, secondClicked);
+                case TAKEPIECE: takePiece(firstClicked, secondClicked); break;
 
-                case DOCASTLE: return;
+                case DOCASTLE: // castle ; break;
+
+                default: break;
             }
 
-            canvas.repaint();
+            clearSelected();
         }
     }
 
