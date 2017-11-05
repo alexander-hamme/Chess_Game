@@ -1,3 +1,5 @@
+package chess;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Objects;
@@ -27,6 +29,9 @@ public class Game extends JFrame implements Runnable {
     private final int BOARDHEIGHT = SQUAREWIDTH * COLS;
 
     private final int BOARDBUFFER = 20;                                     // pixel padding around board
+
+    private final int MAXMOVES = 27;                                        // max number of legal available moves any single piece
+                                                                            // can have at a single point in the game
 
     private int LEFTBUFFER = (WIDTH / 2) - (BOARDWIDTH / 2);                // padding to position chess board in center
     private int TOPBUFFER = (HEIGHT / 2) - (BOARDHEIGHT / 2);
@@ -175,17 +180,41 @@ public class Game extends JFrame implements Runnable {
         private void removeOccupant() {
             this.occupant = null;
         }
+
+        private ArrayList<ChessPiece> getAvailableMoves(ChessPiece piece) {
+
+            ArrayList<ChessPiece> neighbors = new ArrayList<>();        // list of pointers to available squares
+
+
+            switch (piece.name) {
+                case "pawn": ;
+                case "knight": ;
+                case "bishop": ;
+                case "rook": ;
+                case "queen": ;
+                case "king": ;
+            }
+
+
+
+            return neighbors;
+        }
     }
 
-    private class ChessPiece {
+    class ChessPiece {
 
-        private int row;
-        private int col;
-        private int posx;
-        private int posy;
-        private String name;
-        private String side;
         private String pathToImages = "/home/alex/Documents/coding/java/games/src/chess_pieces/";
+        private Boolean hasMoved;
+
+        int posx;
+        int posy;
+
+        int row;
+        int col;
+
+        String name;
+        String side;
+
         BufferedImage image = null;
 
         private void updatePosition(int r, int c) {
@@ -211,8 +240,8 @@ public class Game extends JFrame implements Runnable {
             }
         }
 
-        private ChessPiece() {
-        }
+//        private ChessPiece() {
+//        }
 
         private ChessPiece(int r, int c, String n, String imagepath, String playerOrOpponent) {
             name = n;
@@ -222,7 +251,55 @@ public class Game extends JFrame implements Runnable {
         }
     }
 
+    private class King extends ChessPiece {
+
+        private Boolean hasMoved = false;
+
+        private void updatePosition(int r, int c) {
+            this.row = r;
+            this.col = c;
+            this.posx = LEFTBUFFER + SQUAREWIDTH * (this.col - 1) + SQUAREWIDTH / 4;
+            this.posy = TOPBUFFER + SQUAREWIDTH * (ROWS - this.row) + SQUAREWIDTH / 8;
+
+            if (!hasMoved) {
+                if (!(this.col == 5) || ((this.side.equals("player") && (this.row != 1)) ||
+                        (this.side.equals("opponent") && (this.row != 8)))) {
+                    this.hasMoved = true;
+                }
+            }
+        }
+
+        private boolean isInCheck() {
+
+            return false;
+        }
+
+        private King(int r, int c, String n, String imagepath, String playerOrOpponent) {
+            super(r, c, n, imagepath, playerOrOpponent);
+        }
+
+    }
+
     private class Pawn extends ChessPiece {
+
+        private Boolean hasMoved = false;
+
+        private void updatePosition(int r, int c) {
+            this.row = r;
+            this.col = c;
+            this.posx = LEFTBUFFER + SQUAREWIDTH * (this.col - 1) + SQUAREWIDTH / 4;
+            this.posy = TOPBUFFER + SQUAREWIDTH * (ROWS - this.row) + SQUAREWIDTH / 8;
+
+            if (!hasMoved) {
+                if ((this.side.equals("player") && this.row != 2) || (this.side.equals("opponent") && this.row != 7)) {
+                    this.hasMoved = true;
+                }
+            }
+        }
+
+        private Pawn(int r, int c, String n, String imagepath, String playerOrOpponent) {
+            super(r, c, n, imagepath, playerOrOpponent);
+        }
 
     }
 
@@ -259,8 +336,10 @@ public class Game extends JFrame implements Runnable {
 
             col = 1;
 
-            if (side.equals("player")) {row = 1;}
-            else {row = 8;}
+            switch (side) {
+                case "player": row = 1; break;
+                case "opponent": row = 8; break;
+            }
 
             chessPieces[idx++] = new ChessPiece(row, col++, "rook", "rook" + color + ".PNG", side);
 
@@ -270,7 +349,9 @@ public class Game extends JFrame implements Runnable {
 
             chessPieces[idx++] = new ChessPiece(row, col++, "queen", "queen" + color + ".PNG", side);
 
-            chessPieces[idx++] = new ChessPiece(row, col++, "king", "king" + color + ".PNG", side);
+//            chessPieces[idx++] = new ChessPiece(row, col++, "king", "king" + color + ".PNG", side);
+            chessPieces[idx++] = new King(row, col++, "king", "king" + color + ".PNG", side);
+
 
             chessPieces[idx++] = new ChessPiece(row, col++, "bishop", "bishop" + color + ".PNG", side);
 
@@ -280,11 +361,13 @@ public class Game extends JFrame implements Runnable {
 
             col = 1;
 
-            if (side.equals("player")) {row = 2;}
-            else {row = 7;}
+            switch (side) {
+                case "player": row = 2; break;
+                case "opponent": row = 7; break;
+            }
 
             for (int k = 0; k < 8; k++) {
-                chessPieces[idx++] = new ChessPiece(row, col, "pawn", "pawn" + color  + ".PNG", side);
+                chessPieces[idx++] = new Pawn(row, col, "pawn", "pawn" + color  + ".PNG", side);
                 col++;
             }
 
@@ -295,7 +378,7 @@ public class Game extends JFrame implements Runnable {
 
         // Assign chess pieces to their respective squares
         for (ChessPiece piece: chessPieces) {
-            for (ChessSquare sq : chessSquares) {
+            for (ChessSquare sq: chessSquares) {
                 if (piece.row == sq.row && piece.col == sq.col) {
                     sq.updateOccupant(piece);
                 }
