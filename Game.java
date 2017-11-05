@@ -54,7 +54,8 @@ public class Game extends JFrame implements Runnable {
     private DrawPane canvas;
     private Container window;
 
-    private ChessSquare[] chessSquares = new ChessSquare[ROWS*COLS];
+//    private ChessSquare[] chessSquares = new ChessSquare[ROWS*COLS];
+    private ArrayList<ChessSquare> chessSquares = new ArrayList<>();
     private ChessPiece[] chessPieces = new ChessPiece[numbStartPieces];
     private ArrayList<ChessPiece> takenPieces = new ArrayList<>();
 
@@ -111,7 +112,7 @@ public class Game extends JFrame implements Runnable {
             }
 
             // Draw selection boxes around selected squares
-            if (Arrays.stream(chessSquares).noneMatch(Objects::isNull)) {
+            if (! chessSquares.isEmpty()) {
                 for (ChessSquare sq: chessSquares) {
                     sq.updateWindowPosition();
                     if (sq.selected){
@@ -159,6 +160,13 @@ public class Game extends JFrame implements Runnable {
             this.posy = TOPBUFFER + SQUAREWIDTH * (ROWS - this.row);        // Y must be switched to be on bottom of board
         }
 
+        private int getIndex(ChessSquare[] squares) {
+            for (int i=0; i<squares.length; i++){
+                if (squares[i].equals(this)) {return i;}
+            }
+            return -1;
+        }
+
         @Override
         public String toString() {
             String string = "square at row " + this.row + ", col " + this.col;
@@ -181,30 +189,89 @@ public class Game extends JFrame implements Runnable {
             this.occupant = null;
         }
 
-        private ArrayList<ChessPiece> getAvailableMoves(ChessPiece piece) {
+        private ArrayList<ChessSquare> getAvailableMoves(ChessPiece piece) {
 
-            ArrayList<ChessPiece> neighbors = new ArrayList<>();        // list of pointers to available squares
+            ArrayList<ChessSquare> availableSquares = new ArrayList<>();        // list of pointers to available squares
+
+            int index = chessSquares.indexOf(this);//this.getIndex(chessSquares);
 
 
             switch (piece.name) {
-                case "pawn": ;
-                case "knight": ;
+
+                case "pawn": {
+
+                    int rowIncrement =  (piece.side.equals("player")) ? 1 : -1;
+
+                    chessSquares.forEach(sq -> {
+
+                        if (sq.occupant == null) {      // empty squares pawn can move to
+
+                            if(sq.col == this.col && sq.row == this.row + rowIncrement) {
+                                availableSquares.add(sq);
+                            }
+
+                            else if (piece.inInitialPosition()) {
+                                if (sq.col == this.col && sq.row == this.row + (2 * rowIncrement)) {
+                                    availableSquares.add(sq);
+                                }
+                            }
+
+                        } else {            // squares that pawn can take a piece on
+
+                            if (Math.abs(sq.col - this.col) == 1 && (sq.row == this.row + rowIncrement)
+                                    && !(sq.occupant.side.equals(this.occupant.side))) {
+                                availableSquares.add(sq);
+                            }
+                        }
+
+                    });
+                }
+
+                case "knight": {
+
+                    int rowIncrement = (piece.side.equals("player")) ? 1 : -1;
+                    int colIncrement = 0;
+
+                    chessSquares.forEach(sq -> {
+
+                        if (sq.occupant == null) {      // empty squares pawn can move to
+
+                            if (sq.col == this.col && sq.row == this.row + rowIncrement) {
+                                System.out.println("stuff");
+                                availableSquares.add(sq);
+                            }
+
+                            else if (piece.inInitialPosition()) {
+                                if (sq.col == this.col && sq.row == this.row + (2 * rowIncrement)) {
+                                    availableSquares.add(sq);
+                                }
+                            }
+
+                        } else {            // squares that pawn can take a piece on
+
+                            if (Math.abs(sq.col - this.col) == 1 && (sq.row == this.row + rowIncrement)
+                                    && !(sq.occupant.side.equals(this.occupant.side))) {
+                                availableSquares.add(sq);
+                            }
+                        }
+
+                    });
+                }
                 case "bishop": ;
                 case "rook": ;
                 case "queen": ;
                 case "king": ;
             }
 
-
-
-            return neighbors;
+            return availableSquares;
         }
     }
 
     class ChessPiece {
 
         private String pathToImages = "/home/alex/Documents/coding/java/games/src/chess_pieces/";
-        private Boolean hasMoved;
+
+        private final int[] initPos;// = new int[2];                  // initial position
 
         int posx;
         int posy;
@@ -216,6 +283,10 @@ public class Game extends JFrame implements Runnable {
         String side;
 
         BufferedImage image = null;
+
+        private boolean inInitialPosition(){
+            return initPos[0] == this.row && initPos[1] == this.col;
+        }
 
         private void updatePosition(int r, int c) {
             this.row = r;
@@ -248,26 +319,13 @@ public class Game extends JFrame implements Runnable {
             side = playerOrOpponent;
             updatePosition(r, c);
             loadImage(imagepath);
+            initPos = new int[] {r, c};
+            System.out.println((initPos.toString()));
+
         }
     }
 
     private class King extends ChessPiece {
-
-        private Boolean hasMoved = false;
-
-        private void updatePosition(int r, int c) {
-            this.row = r;
-            this.col = c;
-            this.posx = LEFTBUFFER + SQUAREWIDTH * (this.col - 1) + SQUAREWIDTH / 4;
-            this.posy = TOPBUFFER + SQUAREWIDTH * (ROWS - this.row) + SQUAREWIDTH / 8;
-
-            if (!hasMoved) {
-                if (!(this.col == 5) || ((this.side.equals("player") && (this.row != 1)) ||
-                        (this.side.equals("opponent") && (this.row != 8)))) {
-                    this.hasMoved = true;
-                }
-            }
-        }
 
         private boolean isInCheck() {
 
@@ -280,39 +338,42 @@ public class Game extends JFrame implements Runnable {
 
     }
 
-    private class Pawn extends ChessPiece {
-
-        private Boolean hasMoved = false;
-
-        private void updatePosition(int r, int c) {
-            this.row = r;
-            this.col = c;
-            this.posx = LEFTBUFFER + SQUAREWIDTH * (this.col - 1) + SQUAREWIDTH / 4;
-            this.posy = TOPBUFFER + SQUAREWIDTH * (ROWS - this.row) + SQUAREWIDTH / 8;
-
-            if (!hasMoved) {
-                if ((this.side.equals("player") && this.row != 2) || (this.side.equals("opponent") && this.row != 7)) {
-                    this.hasMoved = true;
-                }
-            }
-        }
-
-        private Pawn(int r, int c, String n, String imagepath, String playerOrOpponent) {
-            super(r, c, n, imagepath, playerOrOpponent);
-        }
-
-    }
+//    private class Pawn extends ChessPiece {
+//
+//        private boolean hasMoved = false;
+//
+//        private void updatePosition(int r, int c) {
+//            this.row = r;
+//            this.col = c;
+//            this.posx = LEFTBUFFER + SQUAREWIDTH * (this.col - 1) + SQUAREWIDTH / 4;
+//            this.posy = TOPBUFFER + SQUAREWIDTH * (ROWS - this.row) + SQUAREWIDTH / 8;
+//
+//            if (!hasMoved) {
+//                if ((this.side.equals("player") && this.row != 2) || (this.side.equals("opponent") && this.row != 7)) {
+//                    this.hasMoved = true;
+//                }
+//            }
+//        }
+//
+//        private Pawn(int r, int c, String n, String imagepath, String playerOrOpponent) {
+//            super(r, c, n, imagepath, playerOrOpponent);
+//        }
+//
+//    }
 
     private void constructBoard() {
 
         int row = 1;
         int col = 1;
 
-        for (int i = 0; i < chessSquares.length; i++) {
+//        for (int i = 0; i < chessSquares.size(); i++) {
+        int i = 1;
+
+        while (ROWS*COLS >= i++) {
 
             System.out.println(columnNames[col-1] + col);
 
-            chessSquares[i] = new ChessSquare(row, col, columnNames[col-1] + col);
+            chessSquares.add(new ChessSquare(row, col, columnNames[col-1] + col));
 
             if (col < 8) col ++;
 
@@ -367,7 +428,7 @@ public class Game extends JFrame implements Runnable {
             }
 
             for (int k = 0; k < 8; k++) {
-                chessPieces[idx++] = new Pawn(row, col, "pawn", "pawn" + color  + ".PNG", side);
+                chessPieces[idx++] = new ChessPiece(row, col, "pawn", "pawn" + color  + ".PNG", side);
                 col++;
             }
 
@@ -377,22 +438,36 @@ public class Game extends JFrame implements Runnable {
         }
 
         // Assign chess pieces to their respective squares
+//        for (ChessPiece piece: chessPieces) {
+//            for (ChessSquare sq: chessSquares) {
+//                if (piece.row == sq.row && piece.col == sq.col) {
+//                    System.out.println("updating shit");
+//                    sq.updateOccupant(piece);
+//                }
+//            }
+//        }
+
+
         for (ChessPiece piece: chessPieces) {
-            for (ChessSquare sq: chessSquares) {
+            chessSquares.forEach(sq -> {
                 if (piece.row == sq.row && piece.col == sq.col) {
                     sq.updateOccupant(piece);
                 }
-            }
+            });
         }
     }
 
     private void getClicked(int x, int y) {
+
+        /* TODO: If a piece is double selected, have it show (blue) lines to all available squares it can move to!!*/
         for (ChessSquare sq : chessSquares) {
             // If click coordinates correspond to a square
             if (sq.posx <= x && x <= sq.posx + SQUAREWIDTH
                 && sq.posy <= y && y <= sq.posy + SQUAREWIDTH){
                 System.out.println("Selected square at " + sq.row + " " + sq.col);
                 sq.selected = true;
+
+//                if (sq.occupant != null) sq.getAvailableMoves(sq.occupant);
 
                 if (firstClicked == null) {
                     firstClicked = sq;
@@ -477,6 +552,16 @@ public class Game extends JFrame implements Runnable {
 
         private void moveToEmpty(ChessSquare sq1, ChessSquare sq2) {
 
+            assert sq1.occupant != null;
+
+            if (sq1.getAvailableMoves(sq1.occupant).contains(sq2))
+                System.out.println("That is a valid move");
+            else {
+                System.out.println("That is not a valid move");
+                return;
+            }
+
+
             System.out.println("Moving " + sq1.occupant.name + " from " + sq1.toString() + " to " + sq2.toString());
             secondClicked.updateOccupant(firstClicked.occupant);
             firstClicked.removeOccupant();
@@ -486,11 +571,19 @@ public class Game extends JFrame implements Runnable {
             clearSelected();        // This must be called AFTER canvas.repaint
         }
 
-        private void takePiece(ChessSquare sq1, ChessSquare sq2) throws AssertionError{
+        private void takePiece(ChessSquare sq1, ChessSquare sq2) {
+
             try {
                 assert (!(sq1.occupant.side.equals(sq2.occupant.side)));
             } catch (AssertionError e) {
                 System.out.println("Couldn't take piece");
+                return;
+            }
+
+            if (sq1.getAvailableMoves(sq1.occupant).contains(sq2))
+                System.out.println("That is a valid move");
+            else {
+                System.out.println("That is not a valid move");
                 return;
             }
 
