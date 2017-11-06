@@ -46,6 +46,7 @@ public class Game extends JFrame implements Runnable {
 
     private Color backgroundColor = new Color(65, 65, 45);
     private Color selectionColor = new Color(0, 241, 247);
+    private Color availableColor = new Color(50, 247, 0);
     private Color blackSquare = new Color(0x312F14);
     private Color whiteSquare = new Color(0xF6FAC9);
 
@@ -58,6 +59,7 @@ public class Game extends JFrame implements Runnable {
     private ArrayList<ChessSquare> chessSquares = new ArrayList<>();
     private ChessPiece[] chessPieces = new ChessPiece[numbStartPieces];
     private ArrayList<ChessPiece> takenPieces = new ArrayList<>();
+    private ArrayList<ChessSquare> availableSquares = new ArrayList<>();        // list of pointers to available squares
 
     private ChessSquare firstClicked;                                     // first square selected (origin)
     private ChessSquare secondClicked;                                    // second square selected (destination)
@@ -121,6 +123,12 @@ public class Game extends JFrame implements Runnable {
 //                        g.drawPolygon();
                         g.setColor(selectionColor);
                         g.drawPolyline(xpoints, ypoints, 5);
+                    } else if (sq.available) {
+                        int[] xpoints = new int[] {sq.posx, sq.posx, sq.posx + SQUAREWIDTH, sq.posx + SQUAREWIDTH, sq.posx};
+                        int[] ypoints = new int[] {sq.posy, sq.posy + SQUAREWIDTH, sq.posy + SQUAREWIDTH, sq.posy, sq.posy};
+//                        g.drawPolygon();
+                        g.setColor(availableColor);
+                        g.drawPolyline(xpoints, ypoints, 5);
                     }
 
                     //  Diplay row/col coordinate for every square
@@ -151,6 +159,7 @@ public class Game extends JFrame implements Runnable {
         private ChessPiece occupant;
 
         private boolean selected = false;
+        private boolean available = false;
 
         private ChessSquare(int r, int c, String s) {
             this.row = r;
@@ -191,10 +200,9 @@ public class Game extends JFrame implements Runnable {
 
         private ArrayList<ChessSquare> getAvailableMoves(ChessPiece piece) {
 
-            ArrayList<ChessSquare> availableSquares = new ArrayList<>();        // list of pointers to available squares
+            if (! availableSquares.isEmpty()) availableSquares.clear();
 
             int index = chessSquares.indexOf(this);//this.getIndex(chessSquares);
-
 
             switch (piece.name) {
 
@@ -224,44 +232,56 @@ public class Game extends JFrame implements Runnable {
                             }
                         }
 
-                    });
+                    }); break;
                 }
 
                 case "knight": {
 
-                    int rowIncrement = (piece.side.equals("player")) ? 1 : -1;
-                    int colIncrement = 0;
-
                     chessSquares.forEach(sq -> {
 
-                        if (sq.occupant == null) {      // empty squares pawn can move to
+                        int colDiff = Math.abs(sq.col - this.col);
+                        int rowDiff = Math.abs(sq.row - this.row);
 
-                            if (sq.col == this.col && sq.row == this.row + rowIncrement) {
-                                System.out.println("stuff");
-                                availableSquares.add(sq);
-                            }
-
-                            else if (piece.inInitialPosition()) {
-                                if (sq.col == this.col && sq.row == this.row + (2 * rowIncrement)) {
-                                    availableSquares.add(sq);
-                                }
-                            }
-
-                        } else {            // squares that pawn can take a piece on
-
-                            if (Math.abs(sq.col - this.col) == 1 && (sq.row == this.row + rowIncrement)
-                                    && !(sq.occupant.side.equals(this.occupant.side))) {
+                        if (sq.occupant == null || !(sq.occupant.side.equals(this.occupant.side))) {        // if square is empty or enemy piece
+                            if (colDiff != rowDiff && (1 <= colDiff && colDiff <= 2) && (1 <= rowDiff && rowDiff <= 2)) {
+                                // if ! (WOULD PUT KING IN CHECK () )
                                 availableSquares.add(sq);
                             }
                         }
 
-                    });
+                    }); break;
                 }
-                case "bishop": ;
+
+                case "bishop": {
+
+                    int maxDist = 8;
+                    // Do this below?
+
+                    chessSquares.forEach(sq -> {
+
+                        int colDiff = Math.abs(sq.col - this.col);
+                        int rowDiff = Math.abs(sq.row - this.row);
+
+                        if (sq.occupant == null || !(sq.occupant.side.equals(this.occupant.side))) {        // if square is empty or enemy piece
+                            if (colDiff == rowDiff) {
+                                // if ! (WOULD PUT KING IN CHECK () )
+                                availableSquares.add(sq);
+                            }
+                        }
+                    });
+
+//            availableSquares.forEach(sq ->
+//            if sq is blocked, remove);
+
+                break;
+                }
+
                 case "rook": ;
                 case "queen": ;
                 case "king": ;
             }
+
+
 
             return availableSquares;
         }
@@ -319,9 +339,7 @@ public class Game extends JFrame implements Runnable {
             side = playerOrOpponent;
             updatePosition(r, c);
             loadImage(imagepath);
-            initPos = new int[] {r, c};
-            System.out.println((initPos.toString()));
-
+            initPos = new int[] {r, c};         // Keep track of initial position
         }
     }
 
@@ -404,19 +422,17 @@ public class Game extends JFrame implements Runnable {
 
             chessPieces[idx++] = new ChessPiece(row, col++, "rook", "rook" + color + ".PNG", side);
 
-            chessPieces[idx++] = new ChessPiece(row, col++, "horse", "horseleft" + color + ".PNG", side);
+            chessPieces[idx++] = new ChessPiece(row, col++, "knight", "knightleft" + color + ".PNG", side);
 
             chessPieces[idx++] = new ChessPiece(row, col++, "bishop", "bishop" + color + ".PNG", side);
 
             chessPieces[idx++] = new ChessPiece(row, col++, "queen", "queen" + color + ".PNG", side);
 
-//            chessPieces[idx++] = new ChessPiece(row, col++, "king", "king" + color + ".PNG", side);
             chessPieces[idx++] = new King(row, col++, "king", "king" + color + ".PNG", side);
-
 
             chessPieces[idx++] = new ChessPiece(row, col++, "bishop", "bishop" + color + ".PNG", side);
 
-            chessPieces[idx++] = new ChessPiece(row, col++, "horse", "horseright" + color + ".PNG", side);
+            chessPieces[idx++] = new ChessPiece(row, col++, "knight", "knightright" + color + ".PNG", side);
 
             chessPieces[idx++] = new ChessPiece(row, col, "rook", "rook" + color + ".PNG", side);
 
@@ -472,14 +488,20 @@ public class Game extends JFrame implements Runnable {
                 if (firstClicked == null) {
                     firstClicked = sq;
 
+                    if (firstClicked.occupant != null) {
+                        firstClicked.getAvailableMoves(firstClicked.occupant).forEach(square -> square.available = true);
+                    }
+
                 } else if (secondClicked == null) {
                     secondClicked = sq;
+                    chessSquares.forEach(square -> square.available = false);
 
                 } else if (firstClicked.equals(secondClicked) && secondClicked.equals(sq)){ // deselect squares
                     firstClicked.selected = false;
                     secondClicked.selected = false;
                     firstClicked = null;
                     secondClicked = null;
+
                 } else {
                     firstClicked.selected = false;
                     firstClicked = secondClicked;
