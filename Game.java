@@ -11,7 +11,11 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.awt.*;
 
-/** Rows increase from bottom to top, and Columns from left to right */
+/**
+ * @author Alexander Hamme
+ * 
+ * Note: Rows increase from bottom to top, and Columns from left to right 
+ * */
 
 public class Game extends JFrame implements Runnable {
 
