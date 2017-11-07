@@ -34,9 +34,6 @@ public class Game extends JFrame implements Runnable {
 
     private final int BOARDBUFFER = 20;                                     // pixel padding around board
 
-    private final int MAXMOVES = 27;                                        // max number of legal available moves any single piece
-                                                                            // can have at a single point in the game
-
     private int LEFTBUFFER = (WIDTH / 2) - (BOARDWIDTH / 2);                // padding to position chess board in center
     private int TOPBUFFER = (HEIGHT / 2) - (BOARDHEIGHT / 2);
 
@@ -59,21 +56,18 @@ public class Game extends JFrame implements Runnable {
     private DrawPane canvas;
     private Container window;
 
-//    private ChessSquare[] chessSquares = new ChessSquare[ROWS*COLS];
+    // private ChessSquare[] chessSquares = new ChessSquare[ROWS*COLS];
     private ArrayList<ChessSquare> chessSquares = new ArrayList<>();
     private ChessPiece[] chessPieces = new ChessPiece[numbStartPieces];
     private ArrayList<ChessPiece> takenPieces = new ArrayList<>();
     private ArrayList<ChessSquare> availableSquares = new ArrayList<>();        // list of pointers to available squares
 
-    private ChessSquare firstClicked;                                     // first square selected (origin)
-    private ChessSquare secondClicked;                                    // second square selected (destination)
+    private ChessSquare firstClicked;                                           // first square selected (origin)
+    private ChessSquare secondClicked;                                          // second square selected (destination)
 
     private class DrawPane extends JPanel {
 
-        /**
-         * This method is called implicitly.  It simply draws chess squares as
-         * a collection of squares that are dark or light.
-         */
+        /* This method is called implicitly. */
         protected void paintComponent(Graphics g) {
 
             LEFTBUFFER = (canvas.getSize().width / 2) - (BOARDWIDTH / 2);
@@ -184,7 +178,7 @@ public class Game extends JFrame implements Runnable {
         public String toString() {
             String string = "square at row " + this.row + ", col " + this.col;
 
-            string = (this.occupant == null) ? "empty " + string : string + ", with (" + this.occupant.name + ")";
+            string = (this.occupant == null) ? ("empty " + string) : (string + ", with (" + this.occupant.name + ")");
 
             return string;
         }
@@ -228,7 +222,7 @@ public class Game extends JFrame implements Runnable {
                                 }
                             }
 
-                        } else {            // squares that pawn can take a piece on
+                        } else {                        // squares that pawn can take a piece on
 
                             if (Math.abs(sq.col - this.col) == 1 && (sq.row == this.row + rowIncrement)
                                     && !(sq.occupant.side.equals(this.occupant.side))) {
@@ -360,29 +354,6 @@ public class Game extends JFrame implements Runnable {
 
     }
 
-//    private class Pawn extends ChessPiece {
-//
-//        private boolean hasMoved = false;
-//
-//        private void updatePosition(int r, int c) {
-//            this.row = r;
-//            this.col = c;
-//            this.posx = LEFTBUFFER + SQUAREWIDTH * (this.col - 1) + SQUAREWIDTH / 4;
-//            this.posy = TOPBUFFER + SQUAREWIDTH * (ROWS - this.row) + SQUAREWIDTH / 8;
-//
-//            if (!hasMoved) {
-//                if ((this.side.equals("player") && this.row != 2) || (this.side.equals("opponent") && this.row != 7)) {
-//                    this.hasMoved = true;
-//                }
-//            }
-//        }
-//
-//        private Pawn(int r, int c, String n, String imagepath, String playerOrOpponent) {
-//            super(r, c, n, imagepath, playerOrOpponent);
-//        }
-//
-//    }
-
     private void constructBoard() {
 
         int row = 1;
@@ -444,7 +415,7 @@ public class Game extends JFrame implements Runnable {
 
             switch (side) {
                 case "player": row = 2; break;
-                case "opponent": row = 7; break;
+                case "opponent": row = 7;
             }
 
             for (int k = 0; k < 8; k++) {
@@ -479,7 +450,7 @@ public class Game extends JFrame implements Runnable {
 
     private void getClicked(int x, int y) {
 
-        /* TODO: If a piece is double selected, have it show (blue) lines to all available squares it can move to!!*/
+        /* TODO: If a piece is double selected, have it show (green?) lines to all available squares it can move to*/
         for (ChessSquare sq : chessSquares) {
             // If click coordinates correspond to a square
             if (sq.posx <= x && x <= sq.posx + SQUAREWIDTH
@@ -706,7 +677,7 @@ public class Game extends JFrame implements Runnable {
 
         canvas.getActionMap().put("Enter", new MoveAction());
 
-        setVisible(true);
+        setVisible(true);                                       // This must be the last step
 
     }
 
