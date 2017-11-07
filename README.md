@@ -1,5 +1,5 @@
 # chess_game
-Writing a chess engine from scratch out of personal interest. I plan to make a chess playing AI that will improve itself, most likely through reinforcement learning.
+Writing a chess engine from scratch simply out of personal interest. I plan to make a chess engine with AI that will improve itself, most likely through reinforcement learning.
 
 
 
