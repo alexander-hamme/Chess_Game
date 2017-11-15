@@ -13,8 +13,8 @@ import java.awt.*;
 
 /**
  * @author Alexander Hamme
- * 
- * Note: Rows increase from bottom to top, and Columns from left to right 
+ *
+ * Note: Rows increase from bottom to top, and Columns from left to right
  * */
 
 public class Game extends JFrame implements Runnable {
@@ -34,6 +34,8 @@ public class Game extends JFrame implements Runnable {
 
     private final int BOARDBUFFER = 20;                                     // pixel padding around board
 
+    private final String[] columnNames = new String[] {"a","b","c","d","e","f","g","h"};
+
     private int LEFTBUFFER = (WIDTH / 2) - (BOARDWIDTH / 2);                // padding to position chess board in center
     private int TOPBUFFER = (HEIGHT / 2) - (BOARDHEIGHT / 2);
 
@@ -42,8 +44,6 @@ public class Game extends JFrame implements Runnable {
     private int sleepTime = 100;
 
     private String game_title = "Chess";
-
-    private String[] columnNames = new String[] {"a","b","c","d","e","f","g","h"};
 
     private Color backgroundColor = new Color(65, 65, 45);
     private Color selectionColor = new Color(0, 241, 247);
@@ -118,20 +118,20 @@ public class Game extends JFrame implements Runnable {
                     if (sq.selected){
                         int[] xpoints = new int[] {sq.posx, sq.posx, sq.posx + SQUAREWIDTH, sq.posx + SQUAREWIDTH, sq.posx};
                         int[] ypoints = new int[] {sq.posy, sq.posy + SQUAREWIDTH, sq.posy + SQUAREWIDTH, sq.posy, sq.posy};
-//                        g.drawPolygon();
+
                         g.setColor(selectionColor);
                         g.drawPolyline(xpoints, ypoints, 5);
                     } else if (sq.available) {
                         int[] xpoints = new int[] {sq.posx, sq.posx, sq.posx + SQUAREWIDTH, sq.posx + SQUAREWIDTH, sq.posx};
                         int[] ypoints = new int[] {sq.posy, sq.posy + SQUAREWIDTH, sq.posy + SQUAREWIDTH, sq.posy, sq.posy};
-//                        g.drawPolygon();
+
                         g.setColor(availableColor);
                         g.drawPolyline(xpoints, ypoints, 5);
                     }
 
-                    //  Diplay row/col coordinate for every square
-//                  g.setColor(Color.CYAN);
-//                  g.drawString(sq.row + ", " + sq.col, sq.posx, sq.posy);
+                    //  Display row/col coordinate for every square
+                    g.setColor(Color.CYAN);
+                    g.drawString(sq.row + ", " + sq.col, sq.posx, sq.posy);
                 }
             }
 
@@ -222,7 +222,7 @@ public class Game extends JFrame implements Runnable {
                                 }
                             }
 
-                        } else {                        // squares that pawn can take a piece on
+                        } else {            // squares that pawn can take a piece on
 
                             if (Math.abs(sq.col - this.col) == 1 && (sq.row == this.row + rowIncrement)
                                     && !(sq.occupant.side.equals(this.occupant.side))) {
@@ -267,9 +267,8 @@ public class Game extends JFrame implements Runnable {
                             }
                         }
                     });
-
-//            availableSquares.forEach(sq ->
-//            if sq is blocked, remove);
+                    // availableSquares.forEach(sq ->
+                    // if sq is blocked, remove);
 
                 break;
                 }
@@ -289,7 +288,7 @@ public class Game extends JFrame implements Runnable {
 
         private String pathToImages = "/home/alex/Documents/coding/java/games/src/chess_pieces/";
 
-        private final int[] initPos;// = new int[2];                  // initial position
+        private int[] initPos;// = new int[2];                  // initial position
 
         int posx;
         int posy;
@@ -325,12 +324,10 @@ public class Game extends JFrame implements Runnable {
                 this.image = ImageIO.read(new File(pathToImages + filename));
             } catch (IOException e) {
                 System.out.println("Invalid file path to image: " + pathToImages + filename);
-//                e.printStackTrace();
+                e.printStackTrace();
             }
         }
 
-//        private ChessPiece() {
-//        }
 
         private ChessPiece(int r, int c, String n, String imagepath, String playerOrOpponent) {
             name = n;
@@ -344,7 +341,7 @@ public class Game extends JFrame implements Runnable {
     private class King extends ChessPiece {
 
         private boolean isInCheck() {
-
+            /* do things here */
             return false;
         }
 
@@ -359,7 +356,6 @@ public class Game extends JFrame implements Runnable {
         int row = 1;
         int col = 1;
 
-//        for (int i = 0; i < chessSquares.size(); i++) {
         int i = 1;
 
         while (ROWS*COLS >= i++) {
@@ -392,7 +388,7 @@ public class Game extends JFrame implements Runnable {
 
             switch (side) {
                 case "player": row = 1; break;
-                case "opponent": row = 8; break;
+                case "opponent": row = 8;
             }
 
             chessPieces[idx++] = new ChessPiece(row, col++, "rook", "rook" + color + ".PNG", side);
@@ -428,17 +424,6 @@ public class Game extends JFrame implements Runnable {
 
         }
 
-        // Assign chess pieces to their respective squares
-//        for (ChessPiece piece: chessPieces) {
-//            for (ChessSquare sq: chessSquares) {
-//                if (piece.row == sq.row && piece.col == sq.col) {
-//                    System.out.println("updating shit");
-//                    sq.updateOccupant(piece);
-//                }
-//            }
-//        }
-
-
         for (ChessPiece piece: chessPieces) {
             chessSquares.forEach(sq -> {
                 if (piece.row == sq.row && piece.col == sq.col) {
@@ -450,7 +435,7 @@ public class Game extends JFrame implements Runnable {
 
     private void getClicked(int x, int y) {
 
-        /* TODO: If a piece is double selected, have it show (green?) lines to all available squares it can move to*/
+        /* TODO: If a piece is double selected, have it show (blue) lines to all available squares it can move to!!*/
         for (ChessSquare sq : chessSquares) {
             // If click coordinates correspond to a square
             if (sq.posx <= x && x <= sq.posx + SQUAREWIDTH
@@ -458,7 +443,7 @@ public class Game extends JFrame implements Runnable {
                 System.out.println("Selected square at " + sq.row + " " + sq.col);
                 sq.selected = true;
 
-//                if (sq.occupant != null) sq.getAvailableMoves(sq.occupant);
+                // if (sq.occupant != null) sq.getAvailableMoves(sq.occupant);
 
                 if (firstClicked == null) {
                     firstClicked = sq;
@@ -504,7 +489,7 @@ public class Game extends JFrame implements Runnable {
 
 
         private MoveAction() {
-//          do nothing
+          // do nothing
         }
 
         private void checkSquares() {           // Check selection status of squares
@@ -666,7 +651,7 @@ public class Game extends JFrame implements Runnable {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-//                System.out.println("Released: " + e.getX() + "," + e.getY());
+                // TODO: try to implement dragging pieces with this
             }
 
         });
@@ -677,7 +662,7 @@ public class Game extends JFrame implements Runnable {
 
         canvas.getActionMap().put("Enter", new MoveAction());
 
-        setVisible(true);                                       // This must be the last step
+        setVisible(true);
 
     }
 
