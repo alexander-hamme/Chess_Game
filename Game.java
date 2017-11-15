@@ -129,9 +129,9 @@ public class Game extends JFrame implements Runnable {
                         g.drawPolyline(xpoints, ypoints, 5);
                     }
 
-                    //  Display row/col coordinate for every square
+                    /*  Displays row/col coordinate for every square
                     g.setColor(Color.CYAN);
-                    g.drawString(sq.row + ", " + sq.col, sq.posx, sq.posy);
+                    g.drawString(sq.row + ", " + sq.col, sq.posx, sq.posy); */
                 }
             }
 
@@ -266,19 +266,71 @@ public class Game extends JFrame implements Runnable {
                                 availableSquares.add(sq);
                             }
                         }
-                    });
+                    }); break;
                     // availableSquares.forEach(sq ->
                     // if sq is blocked, remove);
-
-                break;
                 }
 
-                case "rook": ;
-                case "queen": ;
-                case "king": ;
+                case "rook": {
+                    int maxDist = 8;
+                    // Do this below?
+
+                    chessSquares.forEach(sq -> {
+
+                        int colDiff = Math.abs(sq.col - this.col);
+                        int rowDiff = Math.abs(sq.row - this.row);
+
+                        if (sq.occupant == null || !(sq.occupant.side.equals(this.occupant.side))) {        // if square is empty or enemy piece
+                            if ((colDiff > 0 && rowDiff == 0) || (rowDiff > 0 && colDiff == 0)){
+                                // if ! (WOULD PUT KING IN CHECK () )
+                                availableSquares.add(sq);
+                            }
+                        }
+                    }); break;
+                    // availableSquares.forEach(sq ->
+                    // if sq is blocked, remove);
+                }
+
+                case "queen": {
+                    int maxDist = 8;
+                    // Do this below?
+
+                    chessSquares.forEach(sq -> {
+
+                        int colDiff = Math.abs(sq.col - this.col);
+                        int rowDiff = Math.abs(sq.row - this.row);
+
+                        if (sq.occupant == null || !(sq.occupant.side.equals(this.occupant.side))) {        // if square is empty or enemy piece
+                            if (colDiff == rowDiff) {
+                                // if ! (WOULD PUT KING IN CHECK () )
+                                availableSquares.add(sq);
+
+                            } else if ((colDiff > 0 && rowDiff == 0) || (rowDiff > 0 && colDiff == 0)) {
+                                // if ! (WOULD PUT KING IN CHECK () )
+                                availableSquares.add(sq);
+                            }
+                        }
+                    }); break;
+                    // availableSquares.forEach(sq ->
+                    // if sq is blocked, remove);;
+                }
+                case "king": {
+
+                    chessSquares.forEach(sq -> {
+
+                        int colDiff = Math.abs(sq.col - this.col);
+                        int rowDiff = Math.abs(sq.row - this.row);
+
+                        if (sq.occupant == null || !(sq.occupant.side.equals(this.occupant.side))) {        // if square is empty or enemy piece
+                            if ((colDiff == 1 && rowDiff <= 1) || (rowDiff == 1 && colDiff <= 1)) {
+                                // if ! (WOULD PUT KING IN CHECK () )
+                                availableSquares.add(sq);
+                            }
+                        }
+                    }); break;
+
+                }
             }
-
-
 
             return availableSquares;
         }
