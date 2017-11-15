@@ -18,8 +18,9 @@
  *  - King can take any piece that it can move to, so long as taking the piece does not result in Check
  *
  *
- *
- *  How to find available moves: for each piece, iterate through all chess squares, and assign better values to the ones that are better,
- *  and 0 or -1 to the ones that can't be moved to
+ * Game
+ *  - If a King is in check and cannot escape, then it is Checkmate, and the attacking player wins.
+ *  - If the only available piece to move is the King, and the King has no available squares to move to, it is Stalemate.
+ *  - (Optional, if time limits are enabled/enforced): If a player's time runs out, they lose.
  *
  */
