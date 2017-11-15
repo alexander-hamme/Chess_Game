@@ -288,7 +288,7 @@ public class Game extends JFrame implements Runnable {
 
         private String pathToImages = "/home/alex/Documents/coding/java/games/src/chess_pieces/";
 
-        private int[] initPos;// = new int[2];                  // initial position
+        private int[] initPos;                  // initial position
 
         int posx;
         int posy;
