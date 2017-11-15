@@ -2,15 +2,16 @@
  * Rules :
  *
  * Movement
- *  - Pawn can move one or two squares from start, after that only one
- *  - Horse can move two squares + one square in four directions or one square + two squares in four directions
- *  - Bishop can move any direction diagonally on its color, up to as many squares as are open
- *  - Rook can move any direction horizontally, up to as many squares as are open
- *  - Queen can move any direction horizontally or diagonally, up to as many squares as are open
- *  - King can move one square in any direction, so long as that move does not result in Check
+ *  - Pawn can move one or two squares from the start, after that only one
+ *  - Horse can jump over pieces and moves in L-shapes: two squares + one square in four directions, 
+ *                                                      or one square + two squares in four directions
+ *  - Bishop can move in any single direction diagonally on its color, up to as many squares as are open
+ *  - Rook can move in any single direction horizontally, up to as many squares as are open
+ *  - Queen can move any single direction horizontally or diagonally, up to as many squares as are open
+ *  - King can move one square in any direction, so long as that move does not result in it being in Check
  *
  * Capture
- *  - Pawn can capture piece to the upper-left or upper-right diagonal square, or special En passant move
+ *  - Pawn can capture piece to the upper-left or upper-right diagonal square, or make the En passant move
  *  - Horse can take any piece that it can land on
  *  - Bishop can take any piece on a square it can move to
  *  - Rook can take any piece on a square it can move to
